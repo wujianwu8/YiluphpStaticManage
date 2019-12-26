@@ -155,7 +155,9 @@ var currentDir = "<?php echo $from_dir; ?>", project_key="<?php echo $project_in
                     var suffix = filename.substring(filename.lastIndexOf(".")+1).toLowerCase();
                     if (suffix=="css" || suffix=="js"){
                         content += '<div><label><input type="checkbox" id="dev_model" class="mt-2" value="1"> 开发模式' +
-                            '（不上传文件至阿里云、引用源文件）</label><div>'+
+                            '（不上传文件至阿里云、引用源文件）</label><div>' +
+                            '<div><label><input type="checkbox" id="compress_file" class="mt-2" value="1" checked> 压缩文件' +
+                            '（非开发模式下才有用）</label><div>'+
                             '<div class="input-group mt-2"><div class="input-group-prepend">\n' +
                             '                  <span class="input-group-text pl-2 pr-1">/include/</span>\n' +
                             '                </div><input type="text" id="shtml_path" class="form-control" ' +
@@ -184,6 +186,7 @@ var currentDir = "<?php echo $from_dir; ?>", project_key="<?php echo $project_in
                                                     $("#shtml_path").val(data.data.info.sinclude_path);
                                                     $("#rename_file").attr("checked", data.data.info.rename==1);
                                                     $("#dev_model").attr("checked", data.data.info.dev_model==1);
+                                                    $("#compress_file").attr("checked", data.data.info.compress==1);
                                                 }
                                             } else {
                                                 $(document).dialog({
@@ -228,6 +231,7 @@ var currentDir = "<?php echo $from_dir; ?>", project_key="<?php echo $project_in
                             }
                             params.rename = $("#rename_file").prop("checked")?1:0;
                             params.dev_model = $("#dev_model").prop("checked")?1:0;
+                            params.compress = $("#compress_file").prop("checked")?1:0;
                             var toast = loading();
                             $.ajax({
                                     type: 'post'

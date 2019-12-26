@@ -19,6 +19,7 @@ $params = $app->input->validate(
         'file_path' => 'required|trim|string|min:4|max:200|return',
         'rename' => 'required|integer|min:0|max:1|return',
         'dev_model' => 'required|integer|min:0|max:1|return',
+        'compress' => 'required|integer|min:0|max:1|return',
         'shtml_path' => 'trim|string|max:200|return',
     ],
     [],
@@ -27,6 +28,7 @@ $params = $app->input->validate(
         'file_path.*' => 2,
         'rename.*' => 3,
         'dev_model.*' => 4,
+        'compress.*' => 7,
     ]);
 
 if (!$project_info=$app->model_static_project->find_table(['project_key'=>$params['project_key']])){
@@ -69,11 +71,11 @@ if (!file_exists($dir_path)){
     return_code(6, '文件不存在：'.$dir_path);
 }
 
+$pathinfo = pathinfo($params['file_path']);
 if (empty($params['dev_model'])) {
     if (empty($params['rename'])) {
         $remote_path = $params['file_path'];
     } else {
-        $pathinfo = pathinfo($params['file_path']);
         $remote_path = $pathinfo['dirname'] . '/' . $pathinfo['filename'] . '.' . date('YmdHis') . '.' . $pathinfo['extension'];
     }
     $remote_path = str_replace('\\', '/', $remote_path);
@@ -81,14 +83,36 @@ if (empty($params['dev_model'])) {
         $remote_path = '/'.$remote_path;
     }
     $remote_path = $project_info['project_key'].$remote_path;
-    $visit_path = $app->tool_oss->upload_file($dir_path, $remote_path);
+    if (!empty($params['compress']) && in_array(strtolower($pathinfo['extension']), ['js','css'])) {
+        $dir_path_tmp = $project_root.'static'.DIRECTORY_SEPARATOR.'temp';
+        if (!is_dir($dir_path_tmp)) {
+            mkdir($dir_path_tmp, 0777, true);
+        }
+        $dir_path_tmp .= DIRECTORY_SEPARATOR.date('YmdHis-').mt_rand(0, 9999).'.'.$pathinfo['extension'];
+        $cmd = 'java -jar '.$project_root.'tool'.DIRECTORY_SEPARATOR.'yuicompressor-2.4.8.jar '.$dir_path.' > '.$dir_path_tmp;
+        system($cmd, $return_var);
+        if($return_var>0){
+            return_code(8, '压缩文件失败');
+        }
+    }
+    else{
+        $dir_path_tmp = $dir_path;
+    }
+    if(!$visit_path = $app->tool_oss->upload_file($dir_path_tmp, $remote_path)){
+        if ($dir_path_tmp != $dir_path){
+            unlink($dir_path_tmp);
+        }
+        return_code(9, '上传文件至阿里云失败');
+    }
+    if ($dir_path_tmp != $dir_path){
+        unlink($dir_path_tmp);
+    }
 }
 else{
     $visit_path = $params['file_path'];
 }
 
 if (!empty($params['shtml_path'])) {
-    $pathinfo = pathinfo($params['file_path']);
     if (in_array(strtolower($pathinfo['extension']), ['js','css'])) {
         $path = dirname($shtml_path);
         if (!is_dir($path)) {
@@ -128,6 +152,7 @@ $data = [
     'uid' => $self_info['uid'],
     'dev_model' => $params['dev_model'],
     'rename' => $params['rename'],
+    'compress' => $params['compress'],
     'project_key' => $params['project_key'],
     'source_path' => $params['file_path'],
     'version_path' => $visit_path,
