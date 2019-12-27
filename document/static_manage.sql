@@ -1,14 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
+ Source Server         : 本机
  Source Server Type    : MySQL
  Source Server Version : 50710
  Source Host           : localhost
  Source Database       : static_manage
 
+ Target Server Type    : MySQL
+ Target Server Version : 50710
  File Encoding         : utf-8
 
- Date: 12/26/2019 16:33:48 PM
+ Date: 12/27/2019 15:45:41 PM
 */
 
 SET NAMES utf8;
@@ -22,14 +25,15 @@ CREATE TABLE `file_version` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `uid` bigint(20) unsigned NOT NULL,
   `dev_model` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '开发模式，开发模式下css和js文件直接引入源文件，0为非开发模式，1为开发模式',
-  `rename` tinyint(1) unsigned DEFAULT '0' COMMENT '0上传后保持原文件名，1为生成新的文件名',
+  `rename` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0上传后保持原文件名，1为生成新的文件名',
+  `compress` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否压缩文件，针对CSS和JS文件才有用',
   `project_key` varchar(100) NOT NULL COMMENT '所属系统名称',
   `source_path` varchar(500) NOT NULL COMMENT '从项目下的static目录开始，源文件的磁盘路径',
   `version_path` varchar(500) NOT NULL COMMENT '版本文件的访问URL',
   `sinclude_path` varchar(500) DEFAULT '' COMMENT '引入shtml的路径',
   `ctime` int(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1186 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1193 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Table structure for `static_project`
